@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 45 100% 97%;
+    --foreground: 262 40% 14%;
+    --card: 0 0% 100%;
+    --card-foreground: 262 40% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 262 40% 14%;
+    --primary: 266 82% 52%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 270 80% 96%;
+    --secondary-foreground: 262 40% 14%;
+    --muted: 270 60% 96%;
+    --muted-foreground: 262 14% 40%;
+    --accent: 270 80% 96%;
+    --accent-foreground: 262 40% 14%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 265 55% 90%;
+    --input: 265 55% 90%;
+    --ring: 266 82% 52%;
+    --radius: 1rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display;
+  }
+}
+
+/* Respect users who are sensitive to motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+@keyframes bubble-rise {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-560px);
+  }
+}
+
+
+
+/* Clear keyboard focus for every interactive element */
+:focus-visible {
+  outline: 3px solid #5f17c4;
+  outline-offset: 2px;
+}
+
+/* Kid-friendly large click targets */
+@layer components {
+  /* Soft, sunny page background with coloured bubbles */
+  .bg-kid {
+    background-color: #fff9ec;
+    background-image:
+      radial-gradient(circle at 10% 14%, rgba(255, 107, 107, 0.14) 0 90px, transparent 91px),
+      radial-gradient(circle at 90% 10%, rgba(62, 198, 255, 0.18) 0 120px, transparent 121px),
+      radial-gradient(circle at 82% 88%, rgba(255, 210, 63, 0.22) 0 130px, transparent 131px),
+      radial-gradient(circle at 6% 86%, rgba(46, 196, 182, 0.16) 0 100px, transparent 101px),
+      radial-gradient(circle at 50% 50%, rgba(255, 122, 198, 0.08) 0 180px, transparent 181px);
+    background-attachment: fixed;
+  }
+
+  .exercise-option {
+    @apply relative cursor-pointer rounded-2xl border-2 border-border bg-white p-4 text-left
+      text-base font-semibold shadow-[0_3px_0_0_rgba(117,36,232,0.12)] transition-all duration-200
+      hover:-translate-y-0.5 hover:border-brand-400 hover:bg-brand-50
+      focus:outline-none focus:ring-2 focus:ring-brand-500;
+  }
+  .exercise-option.selected {
+    @apply border-brand-500 bg-brand-50 ring-2 ring-brand-200;
+  }
+  .exercise-option.correct {
+    @apply border-green-500 bg-green-50 text-green-800;
+  }
+  .exercise-option.incorrect {
+    @apply border-red-400 bg-red-50 text-red-700;
+  }
+
+  .badge-card {
+    @apply flex flex-col items-center gap-2 rounded-3xl border-2 border-border bg-white p-4
+      text-center shadow-sm;
+  }
+
+  .stat-card {
+    @apply rounded-3xl border-2 border-border bg-white p-5 shadow-sm;
+  }
+
+  /* Chunky "button you want to press" look */
+  .btn-chunky {
+    @apply rounded-2xl font-extrabold shadow-[0_4px_0_0_rgba(0,0,0,0.18)] transition-transform
+      active:translate-y-0.5 active:shadow-[0_2px_0_0_rgba(0,0,0,0.18)];
+  }
+
+  /* Tile used on the Fun Zone and hub pages */
+  .tile {
+    @apply relative overflow-hidden rounded-3xl p-5 text-white shadow-md transition-transform
+      hover:-translate-y-1 hover:shadow-xl;
+  }
+}

@@ -1,0 +1,276 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth ───────────────────────────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Users ──────────────────────────────────────────────────────────────────
+
+enum Role {
+  STUDENT
+  TEACHER
+  PARENT
+  ADMIN
+}
+
+enum Grade {
+  K
+  G1
+  G2
+  G3
+  G4
+  G5
+  G6
+  G7
+  G8
+  G9
+  G10
+  G11
+  G12
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          Role      @default(STUDENT)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+
+  // Student-specific
+  grade        Grade?
+  studentLevel Int    @default(1) // 1–10 adaptive level
+  totalStars   Int    @default(0)
+  totalXP      Int    @default(0)
+  streakDays   Int    @default(0)
+  lastActiveAt DateTime?
+  // true once the child finished or skipped the first placement quest
+  placementDone Boolean @default(false)
+
+  // Relations
+  classroomsAsStudent Enrollment[]
+  classroomsAsTeacher Classroom[]     @relation("TeacherClassrooms")
+  children            ParentChild[]   @relation("ParentChildren")
+  parents             ParentChild[]   @relation("ChildParents")
+  progress            Progress[]
+  badges              UserBadge[]
+  exerciseSessions    ExerciseSession[]
+  notifications       Notification[]
+  practiceGoals       PracticeGoal[]
+}
+
+model ParentChild {
+  id        String @id @default(cuid())
+  parentId  String
+  childId   String
+  parent    User   @relation("ParentChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  child     User   @relation("ChildParents", fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([parentId, childId])
+}
+
+// ─── Classrooms ─────────────────────────────────────────────────────────────
+
+model Classroom {
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique @default(cuid())
+  teacherId String
+  grade     Grade
+  createdAt DateTime @default(now())
+
+  teacher     User         @relation("TeacherClassrooms", fields: [teacherId], references: [id])
+  enrollments Enrollment[]
+}
+
+model Enrollment {
+  id          String   @id @default(cuid())
+  studentId   String
+  classroomId String
+  joinedAt    DateTime @default(now())
+
+  student   User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, classroomId])
+}
+
+// ─── Subjects & Exercises ───────────────────────────────────────────────────
+
+enum Subject {
+  MATH
+  READING
+  SCIENCE
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model Topic {
+  id          String    @id @default(cuid())
+  subject     Subject
+  name        String
+  description String?
+  icon        String?
+  order       Int       @default(0)
+  exercises   Exercise[]
+  progress    Progress[]
+  goals       PracticeGoal[]
+}
+
+model Exercise {
+  id           String     @id @default(cuid())
+  topicId      String
+  title        String
+  instructions String
+  type         String     // "multiple_choice" | "fill_blank" | "word_problem" | "reading_comp"
+  difficulty   Difficulty
+  level        Int        // 1–10, used for adaptive algorithm
+  data         Json       // question payload (options, answer, passage, etc.)
+  xpReward     Int        @default(10)
+  starReward   Int        @default(1)
+  active       Boolean    @default(true) // false = retired from the current question bank
+  createdAt    DateTime   @default(now())
+
+  topic    Topic             @relation(fields: [topicId], references: [id])
+  sessions ExerciseSession[]
+}
+
+// ─── Progress & Sessions ────────────────────────────────────────────────────
+
+model ExerciseSession {
+  id          String   @id @default(cuid())
+  userId      String
+  exerciseId  String
+  correct     Boolean
+  timeTaken   Int      // seconds
+  xpEarned    Int      @default(0)
+  starsEarned Int      @default(0)
+  completedAt DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise Exercise @relation(fields: [exerciseId], references: [id])
+}
+
+model Progress {
+  id           String   @id @default(cuid())
+  userId       String
+  topicId      String
+  level        Int      @default(1)
+  correctCount Int      @default(0)
+  totalCount   Int      @default(0)
+  mastered     Boolean  @default(false)
+  sinceChange  Int      @default(0) // answers since the level last changed (stops runaway level-ups)
+  lessonsSeen  Int      @default(0) // how many "Learn first" lessons for this topic the child has read
+  updatedAt    DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id])
+
+  @@unique([userId, topicId])
+}
+
+// ─── Rewards ────────────────────────────────────────────────────────────────
+
+model Badge {
+  id          String    @id @default(cuid())
+  name        String
+  description String
+  icon        String    // emoji or icon name
+  condition   String    // e.g., "streak_7", "xp_500", "math_mastered"
+  xpThreshold Int?
+  users       UserBadge[]
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  badgeId   String
+  earnedAt  DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id])
+
+  @@unique([userId, badgeId])
+}
+
+// ─── Notifications ───────────────────────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  type      String   // "badge", "streak", "level_up", "message"
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── Practice time (set by a parent, per child and skill) ────────────────────
+
+model PracticeGoal {
+  id        String   @id @default(cuid())
+  childId   String
+  topicId   String
+  minutes   Int      @default(10) // daily practice minutes for this skill; 0 = rest today
+  updatedAt DateTime @updatedAt
+
+  child User  @relation(fields: [childId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, topicId])
+}
