@@ -14,6 +14,9 @@ import {
   BookHeart,
   Palette,
   Gamepad2,
+  Heart,
+  Pencil,
+  Printer,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import MusicToggle from "@/components/fun/MusicToggle";
@@ -25,6 +28,8 @@ const STUDENT_NAV = [
   { href: "/dashboard/stories", icon: BookHeart, label: "Stories" },
   { href: "/dashboard/art", icon: Palette, label: "Art & Craft" },
   { href: "/dashboard/fun", icon: Gamepad2, label: "Fun Zone" },
+  { href: "/dashboard/learn/feelings", icon: Heart, label: "Feelings" },
+  { href: "/dashboard/learn/letters", icon: Pencil, label: "Handwriting" },
   { href: "/dashboard/placement", icon: Sparkles, label: "Placement" },
   { href: "/dashboard/progress", icon: TrendingUp, label: "My Progress" },
   { href: "/dashboard/rewards", icon: Trophy, label: "Rewards" },
@@ -39,6 +44,7 @@ const TEACHER_NAV = [
 const PARENT_NAV = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/dashboard/children", icon: Users, label: "My Children" },
+  { href: "/dashboard/learn/printables", icon: Printer, label: "Printables" },
 ];
 
 const NAV_MAP: Record<string, typeof STUDENT_NAV> = {

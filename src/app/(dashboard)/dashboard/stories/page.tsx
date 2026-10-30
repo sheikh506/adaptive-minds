@@ -22,6 +22,21 @@ export default async function StoriesPage() {
         </p>
       </div>
 
+      {/* Decodable readers promo tile */}
+      <Link
+        href="/dashboard/stories/decodable"
+        className="group flex items-center gap-5 rounded-3xl bg-gradient-to-r from-sky-500 to-teal-500 p-5 text-white shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md"
+      >
+        <span className="text-5xl flex-shrink-0" aria-hidden="true">📖</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-bold uppercase tracking-wide text-white/80">New</p>
+          <h2 className="text-xl font-bold">Decodable Readers</h2>
+          <p className="text-sm text-white/90">Short books made from the letter patterns you are learning — sound out every word yourself!</p>
+        </div>
+        <span className="rounded-2xl bg-white py-2 px-4 text-sm font-extrabold text-teal-700 group-hover:bg-yellow-100 flex-shrink-0">Open →</span>
+      </Link>
+
+      <h2 className="text-xl font-extrabold text-gray-900">📚 Picture Books</h2>
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {STORIES.map((s) => (
           <Link
