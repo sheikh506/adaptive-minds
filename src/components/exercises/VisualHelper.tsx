@@ -66,7 +66,7 @@ function TenFrame({ total, filled }: { total: number; filled: number }) {
 
 // ─── Number Bond ─────────────────────────────────────────────────────────────
 
-function NumberBond({ whole, part1, part2 }: { whole: number; part1: number | null; part2: number | null }) {
+function NumberBond({ whole, part1, part2 }: { whole: number | null; part1: number | null; part2: number | null }) {
   return (
     <div className="flex flex-col items-center gap-2 py-3" role="img" aria-label={`Number bond: whole is ${whole}`}>
       {/* Whole */}

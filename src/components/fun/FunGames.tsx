@@ -41,6 +41,11 @@ export default function FunGames({ initial = "memory" }: { initial?: GameId }) {
 }
 
 // ─── Memory Match ───────────────────────────────────────────────────────────
+//
+// Executive-function framing: working memory + inhibitory control.
+// The child must hold the positions of hidden cards in mind (working memory)
+// and resist the urge to flip a third card before checking the pair (inhibition).
+// No timer. No score comparison. Tries count is for self-reflection, not ranking.
 
 const FACES = ["🐶", "🐱", "🐸", "🦁", "🐼", "🐙"];
 
@@ -93,6 +98,10 @@ function Memory() {
 
   return (
     <div className="space-y-4">
+      <div className="rounded-xl bg-indigo-50 border border-indigo-200 px-3 py-2 text-xs text-indigo-800 max-w-md">
+        <strong>Brain skill: Working memory.</strong> Try to remember where the matching animals are hiding!
+        Flip two cards. If they match, great — they stay open. If not, they flip back. Remember where they were!
+      </div>
       <div className="grid max-w-md grid-cols-4 gap-3">
         {deck.map((face, i) => {
           const shown = open.includes(i) || matched.includes(i);
@@ -109,10 +118,15 @@ function Memory() {
           );
         })}
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <span className="font-semibold text-gray-700">Tries: {tries}</span>
         <button type="button" onClick={reset} className="btn-chunky bg-white px-4 py-2 text-gray-800">New game</button>
-        {won && <span role="status" className="font-bold text-green-700">You found them all! 🎉</span>}
+        {won && (
+          <span role="status" className="font-bold text-green-700">
+            You found them all in {tries} {tries === 1 ? "try" : "tries"}! 🎉
+            {tries <= 8 ? " Excellent memory!" : " Well done — keep practising!"}
+          </span>
+        )}
       </div>
     </div>
   );

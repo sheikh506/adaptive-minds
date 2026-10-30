@@ -17,6 +17,8 @@ import {
   Heart,
   Pencil,
   Printer,
+  Code2,
+  Compass,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import MusicToggle from "@/components/fun/MusicToggle";
@@ -25,11 +27,13 @@ import SfxToggle from "@/components/fun/SfxToggle";
 const STUDENT_NAV = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Home" },
   { href: "/dashboard/play", icon: Map, label: "Learn" },
+  { href: "/dashboard/learn/pathway", icon: Compass, label: "My Pathway" },
   { href: "/dashboard/stories", icon: BookHeart, label: "Stories" },
   { href: "/dashboard/art", icon: Palette, label: "Art & Craft" },
   { href: "/dashboard/fun", icon: Gamepad2, label: "Fun Zone" },
   { href: "/dashboard/learn/feelings", icon: Heart, label: "Feelings" },
   { href: "/dashboard/learn/letters", icon: Pencil, label: "Handwriting" },
+  { href: "/dashboard/learn/coding", icon: Code2, label: "Coding" },
   { href: "/dashboard/placement", icon: Sparkles, label: "Placement" },
   { href: "/dashboard/progress", icon: TrendingUp, label: "My Progress" },
   { href: "/dashboard/rewards", icon: Trophy, label: "Rewards" },

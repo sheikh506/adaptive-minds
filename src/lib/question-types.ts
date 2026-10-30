@@ -20,8 +20,8 @@ export type Visual =
   | { type: "ten_frame"; total: number; filled: number } // ten-frame showing a number (up to 20)
   | {
       type: "number_bond";
-      whole: number;
-      part1: number | null; // null = unknown (child fills in)
+      whole: number | null; // null = unknown (child fills in)
+      part1: number | null;
       part2: number | null;
     }
   | {

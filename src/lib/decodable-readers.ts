@@ -94,6 +94,7 @@ export const DECODABLE_READERS: DecodableReader[] = [
       },
       {
         type: "vocab",
+        prompt: "What does this word mean?",
         word: "fat",
         definition: "'Fat' means big and round. In this story it just means the cat is big — not a mean word!",
       },
@@ -163,6 +164,7 @@ export const DECODABLE_READERS: DecodableReader[] = [
       },
       {
         type: "vocab",
+        prompt: "What does this word mean?",
         word: "shallows",
         definition: "The shallows is the part of the sea near the shore where the water is not very deep.",
       },
@@ -237,6 +239,7 @@ export const DECODABLE_READERS: DecodableReader[] = [
       },
       {
         type: "vocab",
+        prompt: "What does this word mean?",
         word: "sprang",
         definition: "'Sprang' is the past tense of 'spring'. It means to jump suddenly with great force.",
       },
@@ -275,6 +278,7 @@ export const DECODABLE_READERS: DecodableReader[] = [
       },
       {
         type: "vocab",
+        prompt: "What does this word mean?",
         word: "icing",
         definition: "Icing is the sweet, smooth coating on a cake, often white or coloured. You can write on it!",
       },

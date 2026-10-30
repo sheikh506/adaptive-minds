@@ -1,0 +1,38 @@
+{
+  "name": "AdaptiveMinds",
+  "short_name": "AdaptiveMinds",
+  "description": "A bright, calm learning world for kids: math, reading and science quests, stories, art and games.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "categories": ["education", "kids"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Learn",
+      "url": "/dashboard/play",
+      "description": "Go to the learning map"
+    },
+    {
+      "name": "Stories",
+      "url": "/dashboard/stories",
+      "description": "Read a story"
+    }
+  ]
+}

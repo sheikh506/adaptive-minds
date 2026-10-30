@@ -1,5 +1,5 @@
 import { Difficulty } from "@prisma/client";
-import type { Visual } from "../src/lib/question-types";
+import type { Visual, InteractionType } from "../src/lib/question-types";
 
 /**
  * Story-based question generator. Every math/fractions question is a tiny scene inside a Quest World,
@@ -26,6 +26,7 @@ export interface SeedExercise {
     passage?: string;
     visual?: Visual;
     icons?: Record<string, string>;
+    interactionType?: InteractionType;
   };
 }
 
