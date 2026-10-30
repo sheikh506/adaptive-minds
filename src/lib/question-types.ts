@@ -15,14 +15,54 @@ export type Visual =
   | { type: "pizza"; slices: number } // tap slices to colour them in
   | { type: "number_line"; min: number; max: number; step?: number; target?: number; label?: string } // number line visual
   | { type: "grid"; rows: number; cols: number; emoji?: string } // grid visual for multiplication/geometry
-  | { type: "clock"; hour: number; minute: number }; // analog clock face (the question stimulus)
+  | { type: "clock"; hour: number; minute: number } // analog clock face (the question stimulus)
+  // ── Mathematics manipulatives ──────────────────────────────────────────────
+  | { type: "ten_frame"; total: number; filled: number } // ten-frame showing a number (up to 20)
+  | {
+      type: "number_bond";
+      whole: number;
+      part1: number | null; // null = unknown (child fills in)
+      part2: number | null;
+    }
+  | {
+      type: "part_whole";
+      whole: number | null;
+      parts: (number | null)[];
+    }
+  | {
+      type: "place_value_blocks";
+      hundreds: number;
+      tens: number;
+      ones: number;
+    }
+  // ── Phonics manipulatives ──────────────────────────────────────────────────
+  | {
+      type: "letter_tiles";
+      /** Letters to display as tiles, in order. The child drags/taps them. */
+      tiles: string[];
+      /** The target word's graphemes in order (for validation). */
+      targetGraphemes: string[];
+    }
+  | {
+      type: "phoneme_boxes";
+      /** The word to segment — shown as a picture, never in text during the task. */
+      wordEmoji: string;
+      /** Number of phoneme boxes (= number of phonemes in the word). */
+      boxCount: number;
+    };
 
 export type InteractionType =
   | "multiple_choice"
   | "fill_blank"
   | "number_line"
   | "tap_to_count"
-  | "ordering";
+  | "ordering"
+  // Phonics interactions
+  | "tile_build"      // drag letter tiles to build a CVC word
+  | "phoneme_tap"     // tap a box for each sound in a spoken word
+  // Mathematics manipulative interactions
+  | "ten_frame_fill"  // tap ten-frame cells to show a number
+  | "number_bond_fill"; // fill in the missing part of a number bond
 
 /** What the browser is allowed to see before a child answers (no answer, no explanation). */
 export interface PublicData {

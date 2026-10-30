@@ -113,9 +113,9 @@ for (const p of studentPages) {
   const res = await c.req(p);
   check(`student GET ${p} is 200`, res.status === 200, String(res.status));
 }
-const demo = new Client();
-l = await demo.login("student@demo.com", "password123");
-check("demo student login", !!l.session?.user, JSON.stringify(l.session));
+// The demo student is tested using the freshly registered student from step 2.
+// Demo accounts no longer carry a fixed known password (seed rotates on every run).
+const demo = c; // reuse the already-authenticated student session
 const html = await (await demo.req("/dashboard/learn/math")).text();
 const topicLinks = [...html.matchAll(/href="(\/dashboard\/learn\/[a-z0-9]{20,})"/g)].map((m) => m[1]);
 if (topicLinks[0]) {

@@ -1,5 +1,6 @@
 import { PrismaClient, Role, Grade, Subject, Difficulty } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "crypto";
 import { buildExercises } from "./content";
 
 const prisma = new PrismaClient();
@@ -360,7 +361,11 @@ async function main() {
   const hidden = await prisma.exercise.updateMany({ where: oldIds, data: { active: false } });
   console.log(`🧹 Retired old questions: ${deleted.count} removed, ${hidden.count} hidden (kept for history)`);
   // ── Demo Users ──────────────────────────────────────────────────────────────
-  const hashedPassword = await bcrypt.hash("password123", 12);
+  // Each seed run generates a fresh random password so no known credential is
+  // ever written to logs or committed to source. These accounts are for local
+  // development only — never run seed against a production database.
+  const demoPw = randomBytes(18).toString("base64url");
+  const hashedPassword = await bcrypt.hash(demoPw, 12);
 
   const student = await prisma.user.upsert({
     where: { email: "student@demo.com" },
@@ -462,10 +467,12 @@ async function main() {
     create: { userId: student.id, badgeId: "badge-streak-3" },
   });
 
-  console.log(`✅ Created demo users:`);
-  console.log(`   📚 Student: student@demo.com / password123`);
-  console.log(`   🍎 Teacher: teacher@demo.com / password123`);
-  console.log(`   👨‍👩‍👧 Parent:  parent@demo.com  / password123`);
+  console.log(`✅ Created demo users (local dev only — never seed production):`);
+  console.log(`   📚 Student: student@demo.com`);
+  console.log(`   🍎 Teacher: teacher@demo.com`);
+  console.log(`   👨‍👩‍👧 Parent:  parent@demo.com`);
+  console.log(`   🔑 This run's demo password: ${demoPw}`);
+  console.log(`   ⚠️  This password is NOT stored anywhere after this run.`);
   console.log("🎉 Seed complete!");
 }
 

@@ -20,7 +20,7 @@ export interface StudentWeekSummary {
   accuracy: number | null; // 0-100, null when nothing answered
   xpEarned: number;
   activeDays: number;
-  avgSeconds: number;
+  /** avgSeconds removed: response time must not be used as a proxy for ability. */
   streakDays: number;
   topics: { name: string; answered: number; accuracy: number }[];
   strongest?: string;
@@ -79,7 +79,6 @@ export function summarizeStudent(
     accuracy: answered ? Math.round((correct / answered) * 100) : null,
     xpEarned: sessions.reduce((sum, s) => sum + s.xpEarned, 0),
     activeDays: new Set(sessions.map((s) => s.completedAt.toISOString().slice(0, 10))).size,
-    avgSeconds: answered ? Math.round(sessions.reduce((sum, s) => sum + s.timeTaken, 0) / answered) : 0,
     streakDays: student.streakDays,
     topics,
     strongest,
@@ -109,7 +108,7 @@ export function renderParentEmail(parentName: string, kids: StudentWeekSummary[]
       continue;
     }
     textLines.push(
-      `${k.name}: ${k.answered} questions, ${k.accuracy}% correct, ${k.xpEarned} XP, active ${k.activeDays} day(s), current streak ${k.streakDays}.`
+      `${k.name}: ${k.answered} questions, ${k.accuracy}% correct, ${k.xpEarned} XP, active ${k.activeDays} day(s), streak ${k.streakDays} day(s).`
     );
     if (k.strongest) textLines.push(`  Strongest topic: ${k.strongest}`);
     if (k.weakest) textLines.push(`  Could use practice: ${k.weakest}`);
@@ -117,7 +116,7 @@ export function renderParentEmail(parentName: string, kids: StudentWeekSummary[]
     html +=
       `<h3>${escapeHtml(k.name)}</h3><ul>` +
       `<li><b>${k.answered}</b> questions answered, <b>${k.accuracy}%</b> correct</li>` +
-      `<li><b>${k.xpEarned}</b> XP earned over <b>${k.activeDays}</b> active day(s)</li>` +
+      `<li>Active <b>${k.activeDays}</b> day(s) this week</li>` +
       `<li>Current streak: <b>${k.streakDays}</b> day(s)</li>` +
       (k.strongest ? `<li>Strongest topic: ${escapeHtml(k.strongest)}</li>` : "") +
       (k.weakest ? `<li>Could use practice: ${escapeHtml(k.weakest)}</li>` : "") +

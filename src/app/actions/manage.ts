@@ -6,11 +6,11 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { GRADES, nameSchema, avatarSchema, normalizeEmail } from "@/lib/validation";
-import { createRateLimiter } from "@/lib/rate-limit";
+import { createSharedRateLimiter } from "@/lib/rate-limit";
 import { PRACTICE_MINUTE_CHOICES } from "@/lib/game";
 
 // Linking asks for a child's password, so it must not be usable as a password-guessing oracle.
-const linkAttempts = createRateLimiter(5, 15 * 60 * 1000);
+const linkAttempts = createSharedRateLimiter("link", 5, 15 * 60 * 1000);
 
 export type FormState = { error?: string; success?: string };
 
@@ -72,7 +72,7 @@ export async function joinClassroom(formData: FormData): Promise<FormState> {
  */
 export async function linkChild(formData: FormData): Promise<FormState> {
   const parentId = await requireUser("PARENT");
-  if (linkAttempts.isBlocked(parentId)) {
+  if (await linkAttempts.isBlocked(parentId)) {
     return { error: "Too many tries. Please wait a few minutes and try again." };
   }
   const parsed = z
@@ -88,7 +88,7 @@ export async function linkChild(formData: FormData): Promise<FormState> {
       ? await bcrypt.compare(parsed.data.password, child.password)
       : false;
   if (!child || !ok) {
-    linkAttempts.hit(parentId);
+    await linkAttempts.hit(parentId);
     return { error: "Email or password is incorrect, or this is not a student account." };
   }
 

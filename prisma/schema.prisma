@@ -83,6 +83,14 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // Parental/guardian consent audit trail for child accounts.
+  // consentGiven:  true once a responsible adult accepted the Privacy Notice.
+  // consentAt:     timestamp of that acceptance (UTC).
+  // consentAgent:  User-Agent string at the time of consent (for audit purposes only).
+  consentGiven  Boolean   @default(false)
+  consentAt     DateTime?
+  consentAgent  String?   @db.Text
+
   accounts Account[]
   sessions Session[]
 
@@ -106,6 +114,9 @@ model User {
   exerciseSessions    ExerciseSession[]
   notifications       Notification[]
   practiceGoals       PracticeGoal[]
+  skillStates         StudentSkillState[]
+  skillAttempts       SkillAttempt[]
+  skillAssessments    SkillAssessment[]
 }
 
 model ParentChild {
@@ -261,6 +272,135 @@ model Notification {
 }
 
 // ─── Practice time (set by a parent, per child and skill) ────────────────────
+
+// ─── Shared rate-limit store ─────────────────────────────────────────────────
+// Replaces the per-process in-memory limiter so limits hold across serverless
+// instances. Rows are cheap and cleaned up by the limiter itself.
+model RateLimitEntry {
+  id        String   @id  // "prefix:key" e.g. "reg:1.2.3.4" or "login:user@example.com"
+  count     Int      @default(1)
+  resetAt   DateTime
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Fine-grained Skill Mastery ──────────────────────────────────────────────
+//
+// These models extend the existing broad topic-level Progress record to support
+// individual learning skills, evidence-of-mastery tracking and spaced review.
+//
+// Migration safety:
+//   • All new models are purely additive — no existing column is altered.
+//   • No existing row is modified by adding these tables.
+//   • LearningSkill rows are seeded (upserted) by the skill-mastery seeder.
+//   • StudentSkillState rows are created only when a child first encounters a skill.
+
+// A single teachable learning skill (e.g. "recognise the /sh/ digraph").
+model LearningSkill {
+  id              String   @id  // stable string key e.g. "phonics-sh-digraph"
+  subject         Subject
+  name            String   // short display name, e.g. "SH Digraph"
+  objective       String   // full learning objective
+  stageMin        Int      @default(1)  // lowest grade-equivalent stage this skill targets (K=0, G1=1, …)
+  stageMax        Int      @default(2)  // highest grade-equivalent stage
+  order           Int      @default(0)  // within-subject sequencing order
+
+  prerequisites   SkillPrerequisite[] @relation("SkillRequires")
+  requiredBy      SkillPrerequisite[] @relation("SkillRequiredBy")
+  studentStates   StudentSkillState[]
+  assessments     SkillAssessment[]
+  attempts        SkillAttempt[]
+}
+
+// Which skills must be demonstrated before a skill can be formally introduced.
+model SkillPrerequisite {
+  id            String       @id @default(cuid())
+  skillId       String
+  requiresId    String
+
+  skill         LearningSkill @relation("SkillRequires",   fields: [skillId],    references: [id], onDelete: Cascade)
+  requires      LearningSkill @relation("SkillRequiredBy", fields: [requiresId], references: [id], onDelete: Cascade)
+
+  @@unique([skillId, requiresId])
+}
+
+// The learning-stage pipeline for a student's work on a single skill.
+enum SkillStage {
+  TEACH             // explicit instruction shown — child has not yet practised
+  GUIDED_PRACTICE   // supported practice with hints freely available
+  INDEPENDENT       // practice without hints; performance is observed
+  MASTERY_CHECK     // assessment using unseen items; no hints
+  MASTERED          // mastery check passed
+  REVIEW            // periodic spaced review to maintain retention
+}
+
+// The current state of one skill for one student.
+model StudentSkillState {
+  id              String     @id @default(cuid())
+  userId          String
+  skillId         String
+  stage           SkillStage @default(TEACH)
+  // Counts used to advance through the pipeline
+  guidedCorrect   Int        @default(0)
+  guidedTotal     Int        @default(0)
+  independentCorrect Int     @default(0)
+  independentTotal   Int     @default(0)
+  masteryCheckCorrect Int    @default(0)
+  masteryCheckTotal   Int    @default(0)
+  masteredAt      DateTime?
+  nextReviewAt    DateTime?
+  reviewInterval  Int        @default(1)   // days until next review
+  updatedAt       DateTime   @updatedAt
+
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill           LearningSkill @relation(fields: [skillId], references: [id])
+  attempts        SkillAttempt[]
+
+  @@unique([userId, skillId])
+}
+
+// One attempt at a question during a skill session.
+// Linked to the existing ExerciseSession via exerciseSessionId so history is never fabricated.
+model SkillAttempt {
+  id                String     @id @default(cuid())
+  userId            String
+  skillId           String
+  exerciseSessionId String?    // FK to ExerciseSession — null only for offline attempts
+  stage             SkillStage // the pipeline stage when this attempt was made
+  correct           Boolean
+  usedHint          Boolean    @default(false)
+  isUnseenItem      Boolean    @default(false)  // true when this is a mastery-check item
+  attemptedAt       DateTime   @default(now())
+
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill             LearningSkill @relation(fields: [skillId], references: [id])
+
+  @@index([userId, skillId])
+  @@index([userId, attemptedAt])
+}
+
+// A formal assessment event — created when a student completes a MASTERY_CHECK stage.
+model SkillAssessment {
+  id              String     @id @default(cuid())
+  userId          String
+  skillId         String
+  correct         Int
+  total           Int
+  passed          Boolean
+  assessedAt      DateTime   @default(now())
+
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill           LearningSkill @relation(fields: [skillId], references: [id])
+}
+
+// A versioned snapshot of the curriculum so that changes to skill definitions
+// can be tracked and old learning records can be understood in context.
+model ContentCurriculumVersion {
+  id          String   @id @default(cuid())
+  version     String   @unique  // semver e.g. "1.0.0"
+  description String
+  publishedAt DateTime @default(now())
+  active      Boolean  @default(true)  // only one version is active at a time
+}
 
 model PracticeGoal {
   id        String   @id @default(cuid())

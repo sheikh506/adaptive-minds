@@ -250,7 +250,7 @@ const EARTH_FACTS: Fact[] = [
   ["About how many days does Earth take to go around the Sun?", "365", ["30", "7", "100"], 2],
   ["What do we call very hot, dry land with little rain?", "A desert", ["A rainforest", "A glacier", "A swamp"], 2],
   ["Which tool measures temperature?", "A thermometer", ["A ruler", "A clock", "A scale"], 2],
-  ["Is the ocean water fresh or salty?", "Salty", ["Fresh", "Sweet", "Sour"], 2],
+  ["The ocean is made of water. What does it taste like?", "Salty", ["Sweet", "Fresh", "Bitter"], 2, "Ocean water is salty because it contains dissolved salts and minerals."],
   ["What is a rainbow made from?", "Sunlight and water drops", ["Paint", "Smoke", "Wind and sand"], 2],
   // tier 3
   ["Which is the largest planet in our solar system?", "Jupiter", ["Saturn", "Earth", "Mars"], 3],

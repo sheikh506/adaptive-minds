@@ -4,11 +4,11 @@ import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { createRateLimiter } from "@/lib/rate-limit";
+import { createSharedRateLimiter } from "@/lib/rate-limit";
 import { normalizeEmail } from "@/lib/validation";
 
-// 8 failed attempts per email per 15 minutes. Per-instance on serverless, so a speed bump only.
-const failedLogins = createRateLimiter(8, 15 * 60 * 1000);
+// 8 failed attempts per email per 15 minutes, shared across all instances.
+const failedLogins = createSharedRateLimiter("login", 8, 15 * 60 * 1000);
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -31,23 +31,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!parsed.success) return null;
 
         const email = normalizeEmail(parsed.data.email);
-        if (failedLogins.isBlocked(email)) return null;
+        if (await failedLogins.isBlocked(email)) return null;
 
         // Case-insensitive so accounts created before emails were normalised can still sign in.
         const user = await prisma.user.findFirst({
           where: { email: { equals: email, mode: "insensitive" } },
         });
         if (!user || !user.password) {
-          failedLogins.hit(email);
+          await failedLogins.hit(email);
           return null;
         }
 
         const valid = await bcrypt.compare(parsed.data.password, user.password);
         if (!valid) {
-          failedLogins.hit(email);
+          await failedLogins.hit(email);
           return null;
         }
-        failedLogins.reset(email);
+        await failedLogins.reset(email);
 
         return {
           id: user.id,

@@ -66,6 +66,34 @@ export default async function SettingsPage() {
           )}
         </section>
       )}
+
+      {/* Data & Privacy section */}
+      <section className="rounded-3xl border border-border bg-white p-6 shadow-sm">
+        <h2 className="mb-1 font-bold text-gray-900">Your data &amp; privacy</h2>
+        <p className="mb-4 text-sm text-gray-500">
+          You have the right to download a copy of your data or to permanently delete your account.
+          Account deletion cannot be undone.
+        </p>
+        <div className="flex flex-wrap gap-3">
+          <a
+            href="/api/account/export"
+            download
+            className="inline-flex items-center gap-2 rounded-2xl bg-brand-50 px-4 py-2.5 text-sm font-semibold text-brand-700 hover:bg-brand-100 border border-brand-200"
+          >
+            ⬇️ Download my data
+          </a>
+          <a
+            href="/dashboard/settings/delete-account"
+            className="inline-flex items-center gap-2 rounded-2xl bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100 border border-red-200"
+          >
+            🗑️ Delete my account
+          </a>
+        </div>
+        <p className="mt-3 text-xs text-gray-400">
+          For questions about your data, see our{" "}
+          <a href="/privacy" className="underline text-brand-600">Privacy Notice</a>.
+        </p>
+      </section>
     </div>
   );
 }

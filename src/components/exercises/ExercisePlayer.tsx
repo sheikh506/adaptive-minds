@@ -365,7 +365,7 @@ function QuestionView({
     const finalAnswer =
       interactionType === "ordering"
         ? orderingList.join(", ")
-        : interactionType === "tap_to_count"
+        : interactionType === "tap_to_count" || interactionType === "phoneme_tap"
         ? String(tapCount)
         : selected;
 
@@ -778,6 +778,132 @@ function QuestionView({
             </div>
           )}
 
+          {/* 6. Tile Build — letter tiles for phonics */}
+          {interactionType === "tile_build" && (
+            <div className="mt-4 rounded-2xl bg-sky-50/70 p-4 border border-sky-200">
+              <p className="text-center text-xs font-bold text-sky-900 mb-3">
+                Tap letters in order to build the word:
+              </p>
+              {/* Available tiles */}
+              <div className="flex flex-wrap justify-center gap-2 mb-4">
+                {data.options.map((letter, i) => {
+                  const alreadyUsed = selected?.split("").includes(letter);
+                  return (
+                    <button
+                      key={`${letter}-${i}`}
+                      type="button"
+                      disabled={!!result}
+                      onClick={() => {
+                        if (!result) {
+                          setSelected((prev) => (prev ? prev + letter : letter));
+                          if (speech.autoRead) speech.speak(letter);
+                        }
+                      }}
+                      className={cn(
+                        "flex h-14 w-14 items-center justify-center rounded-xl border-2 text-2xl font-extrabold transition-all",
+                        alreadyUsed
+                          ? "border-brand-300 bg-brand-100 text-brand-600"
+                          : "border-brand-400 bg-brand-50 text-brand-900 hover:bg-brand-100 active:scale-95"
+                      )}
+                      aria-label={`Letter tile: ${letter}`}
+                    >
+                      {letter}
+                    </button>
+                  );
+                })}
+              </div>
+              {/* Word being built */}
+              <div className="flex flex-wrap justify-center gap-2">
+                {(selected ?? "").split("").map((ch, i) => (
+                  <div
+                    key={i}
+                    className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-brand-500 bg-white text-xl font-extrabold text-brand-900 shadow-sm"
+                  >
+                    {ch}
+                  </div>
+                ))}
+                {Array.from({ length: Math.max(0, (data.question.match(/\?.*?(\d+)/)?.[1] ? 0 : 3) - (selected?.length ?? 0)) }).map((_, i) => (
+                  <div
+                    key={`empty-${i}`}
+                    className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 text-gray-300"
+                  >
+                    _
+                  </div>
+                ))}
+              </div>
+              {/* Clear button */}
+              {selected && !result && (
+                <div className="mt-3 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setSelected("")}
+                    className="flex items-center gap-1 rounded-full bg-gray-200 px-3 py-1 text-xs font-bold text-gray-600 hover:bg-gray-300"
+                  >
+                    <RotateCcw className="h-3 w-3" /> Clear word
+                  </button>
+                </div>
+              )}
+              <div className="mt-3 text-center">
+                <span className="text-sm font-bold text-gray-700">
+                  Word: <span className="text-xl font-black text-brand-700">{selected || "_"}</span>
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* 7. Phoneme Tap — count phonemes by tapping boxes */}
+          {interactionType === "phoneme_tap" && (
+            <div className="mt-4 rounded-2xl bg-amber-50/70 p-4 border border-amber-200">
+              <p className="text-center text-xs font-bold text-amber-900 mb-3">
+                Tap a box for each sound you hear in the word:
+              </p>
+              <div className="flex flex-wrap justify-center gap-3 py-2">
+                {Array.from({ length: data.tapCountConfig?.maxCount ?? 6 }).map((_, idx) => {
+                  const on = idx < tapCount;
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      disabled={!!result}
+                      onClick={() => {
+                        const newCount = idx + 1 === tapCount ? idx : idx + 1;
+                        setTapCount(newCount);
+                        setSelected(String(newCount));
+                        if (speech.autoRead) speech.speak(`${newCount} sound${newCount !== 1 ? "s" : ""}`);
+                      }}
+                      className={cn(
+                        "h-14 w-14 rounded-2xl border-2 text-lg font-extrabold transition-all",
+                        on
+                          ? "border-amber-500 bg-amber-200 text-amber-900 shadow-sm scale-105"
+                          : "border-dashed border-amber-300 bg-white text-amber-300 hover:border-amber-400"
+                      )}
+                      aria-pressed={on}
+                      aria-label={`Sound box ${idx + 1}${on ? " (tapped)" : ""}`}
+                    >
+                      {on ? "🔊" : ""}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-3 flex items-center justify-between px-2">
+                <button
+                  type="button"
+                  disabled={!!result || tapCount === 0}
+                  onClick={() => {
+                    setTapCount(0);
+                    setSelected("0");
+                  }}
+                  className="flex items-center gap-1 text-xs font-bold text-gray-500 hover:text-gray-800"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" /> Clear
+                </button>
+                <div className="text-sm font-bold text-gray-700">
+                  Sounds heard: <span className="text-xl font-black text-amber-700">{tapCount}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Feedback stays inside the page: one compact block */}
           {result && (
             <div
@@ -850,6 +976,8 @@ function QuestionView({
                   (interactionType === "fill_blank" && !selected?.trim()) ||
                   (interactionType === "number_line" && !selected) ||
                   (interactionType === "tap_to_count" && tapCount === 0) ||
+                  (interactionType === "tile_build" && !selected?.trim()) ||
+                  (interactionType === "phoneme_tap" && tapCount === 0) ||
                   isPending
                 }
                 className="flex-1 rounded-2xl bg-brand-600 py-3 text-lg font-extrabold text-white transition-colors hover:bg-brand-700 disabled:opacity-40"

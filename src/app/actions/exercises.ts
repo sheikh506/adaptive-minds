@@ -22,6 +22,9 @@ import {
   roundStars,
   xpWithHint,
 } from "@/lib/game";
+import { skillIdForTopic } from "@/lib/topic-skill-map";
+import { evaluateSkillProgress, type SkillStateSnapshot } from "@/lib/skill-mastery-engine";
+import type { SkillStage } from "@prisma/client";
 
 interface SubmitParams {
   exerciseId: string;
@@ -270,6 +273,161 @@ export async function submitExerciseAnswer(params: SubmitParams): Promise<Submit
       },
     });
   }
+
+  // ── Fine-grained skill mastery tracking ───────────────────────────────────
+  // This block is additive: it only runs when the exercise's topic maps to a known
+  // LearningSkill. Errors here do not affect the answer response.
+  const skillId = skillIdForTopic(topicId);
+  if (skillId) {
+    try {
+      // Check the skill exists in the DB (seeded by scripts/seed-skills.mjs)
+      const skillExists = await prisma.learningSkill.findUnique({
+        where: { id: skillId },
+        select: { id: true },
+      });
+      if (skillExists) {
+        // Upsert the StudentSkillState row (creates it on first encounter)
+        const existingState = await prisma.studentSkillState.findUnique({
+          where: { userId_skillId: { userId, skillId } },
+        });
+
+        const stateSnapshot: SkillStateSnapshot = existingState
+          ? {
+              stage: existingState.stage as SkillStage,
+              guidedCorrect: existingState.guidedCorrect,
+              guidedTotal: existingState.guidedTotal,
+              independentCorrect: existingState.independentCorrect,
+              independentTotal: existingState.independentTotal,
+              masteryCheckCorrect: existingState.masteryCheckCorrect,
+              masteryCheckTotal: existingState.masteryCheckTotal,
+              masteredAt: existingState.masteredAt,
+              nextReviewAt: existingState.nextReviewAt,
+              reviewInterval: existingState.reviewInterval,
+            }
+          : {
+              stage: "TEACH",
+              guidedCorrect: 0,
+              guidedTotal: 0,
+              independentCorrect: 0,
+              independentTotal: 0,
+              masteryCheckCorrect: 0,
+              masteryCheckTotal: 0,
+              masteredAt: null,
+              nextReviewAt: null,
+              reviewInterval: 1,
+            };
+
+        // hintStage >= 2 means a worked example or 50:50 was used
+        const usedHint = stage >= 2;
+        // isUnseenItem: true only during MASTERY_CHECK stage. We approximate by checking
+        // whether this exercise was NOT answered in the last 30 days.
+        const recentUse = await prisma.exerciseSession.count({
+          where: {
+            userId,
+            exerciseId: exercise.id,
+            completedAt: { gt: new Date(Date.now() - 30 * 86_400_000) },
+          },
+        });
+        const isUnseenItem = stateSnapshot.stage === "MASTERY_CHECK" && recentUse <= 1;
+
+        const engineOutput = evaluateSkillProgress(stateSnapshot, correct, usedHint, isUnseenItem);
+
+        // Compute updated counts for DB write
+        const newGuidedCorrect =
+          stateSnapshot.stage === "GUIDED_PRACTICE"
+            ? stateSnapshot.guidedCorrect + (correct && !usedHint ? 1 : 0)
+            : stateSnapshot.guidedCorrect;
+        const newGuidedTotal =
+          stateSnapshot.stage === "GUIDED_PRACTICE"
+            ? stateSnapshot.guidedTotal + 1
+            : stateSnapshot.guidedTotal;
+        const newIndependentCorrect =
+          stateSnapshot.stage === "INDEPENDENT"
+            ? stateSnapshot.independentCorrect + (correct ? 1 : 0)
+            : stateSnapshot.independentCorrect;
+        const newIndependentTotal =
+          stateSnapshot.stage === "INDEPENDENT"
+            ? stateSnapshot.independentTotal + 1
+            : stateSnapshot.independentTotal;
+        const newMasteryCheckCorrect =
+          stateSnapshot.stage === "MASTERY_CHECK" && isUnseenItem
+            ? stateSnapshot.masteryCheckCorrect + (correct && !usedHint ? 1 : 0)
+            : stateSnapshot.masteryCheckCorrect;
+        const newMasteryCheckTotal =
+          stateSnapshot.stage === "MASTERY_CHECK" && isUnseenItem
+            ? stateSnapshot.masteryCheckTotal + 1
+            : stateSnapshot.masteryCheckTotal;
+
+        await prisma.studentSkillState.upsert({
+          where: { userId_skillId: { userId, skillId } },
+          create: {
+            userId,
+            skillId,
+            stage: engineOutput.newStage,
+            guidedCorrect: newGuidedCorrect,
+            guidedTotal: newGuidedTotal,
+            independentCorrect: newIndependentCorrect,
+            independentTotal: newIndependentTotal,
+            masteryCheckCorrect: newMasteryCheckCorrect,
+            masteryCheckTotal: newMasteryCheckTotal,
+            masteredAt: engineOutput.newStage === "MASTERED" ? new Date() : null,
+            nextReviewAt: engineOutput.nextReviewAt,
+            reviewInterval: engineOutput.reviewInterval,
+          },
+          update: {
+            stage: engineOutput.newStage,
+            guidedCorrect: newGuidedCorrect,
+            guidedTotal: newGuidedTotal,
+            independentCorrect: newIndependentCorrect,
+            independentTotal: newIndependentTotal,
+            masteryCheckCorrect: newMasteryCheckCorrect,
+            masteryCheckTotal: newMasteryCheckTotal,
+            masteredAt:
+              engineOutput.newStage === "MASTERED" && !existingState?.masteredAt
+                ? new Date()
+                : existingState?.masteredAt ?? null,
+            nextReviewAt: engineOutput.nextReviewAt,
+            reviewInterval: engineOutput.reviewInterval,
+          },
+        });
+
+        // Record the SkillAttempt (linked to the ExerciseSession row we created earlier)
+        const sessionRow = await prisma.exerciseSession.findFirst({
+          where: { userId, exerciseId: exercise.id },
+          orderBy: { completedAt: "desc" },
+          select: { id: true },
+        });
+        await prisma.skillAttempt.create({
+          data: {
+            userId,
+            skillId,
+            exerciseSessionId: sessionRow?.id ?? null,
+            stage: stateSnapshot.stage,
+            correct,
+            usedHint,
+            isUnseenItem,
+          },
+        });
+
+        // If a MASTERY_CHECK just completed, record a SkillAssessment
+        if (engineOutput.masteryCheckResult) {
+          await prisma.skillAssessment.create({
+            data: {
+              userId,
+              skillId,
+              correct: engineOutput.masteryCheckResult.correct,
+              total: engineOutput.masteryCheckResult.total,
+              passed: engineOutput.masteryCheckResult.passed,
+            },
+          });
+        }
+      }
+    } catch {
+      // Skill tracking is non-critical. Log nothing to avoid leaking data; the
+      // main answer result is still returned to the child.
+    }
+  }
+  // ── End skill tracking ───────────────────────────────────────────────────
 
   return {
     correct,

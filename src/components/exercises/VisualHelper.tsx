@@ -4,6 +4,261 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { Visual } from "@/lib/question-types";
 
+// ─── Ten Frame ───────────────────────────────────────────────────────────────
+
+/**
+ * Displays a ten-frame (or double ten-frame for numbers > 10).
+ * The filled cells are pre-populated to show a quantity.
+ * Tapping toggles cells so a child can manipulate the frame.
+ */
+function TenFrame({ total, filled }: { total: number; filled: number }) {
+  // Support double ten-frame (up to 20)
+  const frameCount = total > 10 ? 2 : 1;
+  const [tapped, setTapped] = useState<Set<number>>(
+    () => new Set(Array.from({ length: filled }, (_, i) => i))
+  );
+  const toggle = (i: number) =>
+    setTapped((s) => {
+      const n = new Set(s);
+      n.has(i) ? n.delete(i) : n.add(i);
+      return n;
+    });
+
+  return (
+    <div className="flex flex-col items-center gap-2 py-2">
+      {Array.from({ length: frameCount }).map((_, frame) => (
+        <div
+          key={frame}
+          className="grid grid-cols-5 gap-1.5 rounded-xl border-2 border-brand-400 bg-white p-2"
+          role="group"
+          aria-label={`Ten frame ${frame + 1}`}
+        >
+          {Array.from({ length: 10 }).map((_, cell) => {
+            const idx = frame * 10 + cell;
+            const on = tapped.has(idx);
+            return (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => toggle(idx)}
+                aria-pressed={on}
+                aria-label={`Cell ${idx + 1}${on ? " (filled)" : " (empty)"}`}
+                className={cn(
+                  "h-9 w-9 rounded-lg border-2 transition-all",
+                  on
+                    ? "border-brand-600 bg-brand-500 shadow-sm"
+                    : "border-gray-300 bg-gray-50 hover:border-brand-300 hover:bg-brand-50"
+                )}
+              />
+            );
+          })}
+        </div>
+      ))}
+      <Footer>
+        Ten frame · Filled: <span className="text-base text-brand-700">{tapped.size}</span>
+        {tapped.size !== filled && (
+          <ResetButton onClick={() => setTapped(new Set(Array.from({ length: filled }, (_, i) => i)))} />
+        )}
+      </Footer>
+    </div>
+  );
+}
+
+// ─── Number Bond ─────────────────────────────────────────────────────────────
+
+function NumberBond({ whole, part1, part2 }: { whole: number; part1: number | null; part2: number | null }) {
+  return (
+    <div className="flex flex-col items-center gap-2 py-3" role="img" aria-label={`Number bond: whole is ${whole}`}>
+      {/* Whole */}
+      <div className="flex h-12 w-12 items-center justify-center rounded-full border-3 border-brand-500 bg-brand-50 text-xl font-extrabold text-brand-800">
+        {whole}
+      </div>
+      {/* Connecting lines (SVG) */}
+      <svg width="100" height="30" aria-hidden="true">
+        <line x1="50" y1="0" x2="20" y2="30" stroke="#94a3b8" strokeWidth="2" />
+        <line x1="50" y1="0" x2="80" y2="30" stroke="#94a3b8" strokeWidth="2" />
+      </svg>
+      {/* Parts */}
+      <div className="flex gap-10">
+        <div className={cn(
+          "flex h-12 w-12 items-center justify-center rounded-full border-3 text-xl font-extrabold",
+          part1 !== null ? "border-green-500 bg-green-50 text-green-800" : "border-dashed border-gray-400 bg-white text-gray-400"
+        )}>
+          {part1 !== null ? part1 : "?"}
+        </div>
+        <div className={cn(
+          "flex h-12 w-12 items-center justify-center rounded-full border-3 text-xl font-extrabold",
+          part2 !== null ? "border-green-500 bg-green-50 text-green-800" : "border-dashed border-gray-400 bg-white text-gray-400"
+        )}>
+          {part2 !== null ? part2 : "?"}
+        </div>
+      </div>
+      <Footer>
+        {whole} = {part1 !== null ? part1 : "?"} + {part2 !== null ? part2 : "?"}
+      </Footer>
+    </div>
+  );
+}
+
+// ─── Part-Whole Model ─────────────────────────────────────────────────────────
+
+function PartWhole({ whole, parts }: { whole: number | null; parts: (number | null)[] }) {
+  return (
+    <div className="flex flex-col items-center gap-2 py-3" role="img" aria-label="Part-whole model">
+      {/* Whole box */}
+      <div className={cn(
+        "flex h-14 w-28 items-center justify-center rounded-xl border-2 text-2xl font-extrabold",
+        whole !== null ? "border-brand-500 bg-brand-50 text-brand-800" : "border-dashed border-gray-400 bg-white text-gray-400"
+      )}>
+        {whole !== null ? whole : "?"}
+      </div>
+      <svg width={80 * parts.length} height="30" aria-hidden="true">
+        {parts.map((_, i) => (
+          <line
+            key={i}
+            x1={40 * parts.length}
+            y1="0"
+            x2={40 * i + 20}
+            y2="30"
+            stroke="#94a3b8"
+            strokeWidth="2"
+          />
+        ))}
+      </svg>
+      {/* Part boxes */}
+      <div className="flex gap-3">
+        {parts.map((p, i) => (
+          <div key={i} className={cn(
+            "flex h-12 w-12 items-center justify-center rounded-xl border-2 text-xl font-extrabold",
+            p !== null ? "border-green-500 bg-green-50 text-green-800" : "border-dashed border-gray-400 bg-white text-gray-400"
+          )}>
+            {p !== null ? p : "?"}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Place Value Blocks ───────────────────────────────────────────────────────
+
+function PlaceValueBlocks({ hundreds, tens, ones }: { hundreds: number; tens: number; ones: number }) {
+  const total = hundreds * 100 + tens * 10 + ones;
+  return (
+    <div className="flex flex-wrap items-end justify-center gap-4 py-3" role="img" aria-label={`Place value: ${total}`}>
+      {hundreds > 0 && (
+        <div className="flex flex-col items-center gap-1">
+          <div className="flex flex-wrap justify-center gap-0.5" aria-hidden="true">
+            {Array.from({ length: hundreds }).map((_, i) => (
+              <div key={i} className="grid grid-cols-3 gap-px rounded border-2 border-blue-500 bg-blue-100 p-0.5">
+                {Array.from({ length: 9 }).map((_, j) => (
+                  <div key={j} className="h-2.5 w-2.5 rounded-sm bg-blue-400" />
+                ))}
+              </div>
+            ))}
+          </div>
+          <span className="text-[11px] font-bold text-blue-700">{hundreds} hundred{hundreds > 1 ? "s" : ""}</span>
+        </div>
+      )}
+      {tens > 0 && (
+        <div className="flex flex-col items-center gap-1">
+          <div className="flex flex-wrap justify-center gap-0.5" aria-hidden="true">
+            {Array.from({ length: tens }).map((_, i) => (
+              <div key={i} className="flex flex-col gap-px rounded border-2 border-green-500 bg-green-100 p-0.5">
+                {Array.from({ length: 10 }).map((_, j) => (
+                  <div key={j} className="h-2.5 w-2.5 rounded-sm bg-green-400" />
+                ))}
+              </div>
+            ))}
+          </div>
+          <span className="text-[11px] font-bold text-green-700">{tens} ten{tens > 1 ? "s" : ""}</span>
+        </div>
+      )}
+      {ones > 0 && (
+        <div className="flex flex-col items-center gap-1">
+          <div className="flex flex-wrap justify-center gap-0.5 max-w-[5rem]" aria-hidden="true">
+            {Array.from({ length: ones }).map((_, i) => (
+              <div key={i} className="h-5 w-5 rounded border-2 border-orange-400 bg-orange-100" />
+            ))}
+          </div>
+          <span className="text-[11px] font-bold text-orange-700">{ones} one{ones > 1 ? "s" : ""}</span>
+        </div>
+      )}
+      <Footer>
+        {hundreds > 0 && `${hundreds} hundreds `}{tens > 0 && `${tens} tens `}{ones > 0 && `${ones} ones`}
+        {" = "}<span className="text-brand-700 font-extrabold">{total}</span>
+      </Footer>
+    </div>
+  );
+}
+
+// ─── Letter Tiles (display) ──────────────────────────────────────────────────
+
+function LetterTilesVisual({ tiles, targetGraphemes }: { tiles: string[]; targetGraphemes: string[] }) {
+  return (
+    <div className="flex flex-col items-center gap-3 py-2">
+      <div className="flex flex-wrap justify-center gap-2">
+        {tiles.map((letter, i) => (
+          <div
+            key={i}
+            className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-brand-400 bg-brand-50 text-xl font-extrabold text-brand-800 shadow-sm"
+            aria-label={`Letter tile: ${letter}`}
+          >
+            {letter}
+          </div>
+        ))}
+      </div>
+      <div className="flex flex-wrap justify-center gap-2">
+        {targetGraphemes.map((g, i) => (
+          <div
+            key={i}
+            className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-white text-xl font-extrabold text-gray-300"
+            aria-label={`Target slot ${i + 1}`}
+          >
+            _
+          </div>
+        ))}
+      </div>
+      <Footer>Use the tiles above to build the word</Footer>
+    </div>
+  );
+}
+
+// ─── Phoneme Boxes (display) ─────────────────────────────────────────────────
+
+function PhonemeBoxesVisual({ wordEmoji, boxCount }: { wordEmoji: string; boxCount: number }) {
+  const [filled, setFilled] = useState(0);
+  return (
+    <div className="flex flex-col items-center gap-3 py-2">
+      <div className="flex h-20 w-20 items-center justify-center rounded-2xl border-2 border-amber-300 bg-amber-50 text-5xl" aria-hidden="true">
+        {wordEmoji}
+      </div>
+      <div className="flex gap-2">
+        {Array.from({ length: boxCount }).map((_, i) => {
+          const on = i < filled;
+          return (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setFilled(i < filled ? i : i + 1)}
+              aria-pressed={on}
+              aria-label={`Phoneme box ${i + 1}${on ? " (tapped)" : ""}`}
+              className={cn(
+                "h-12 w-12 rounded-xl border-2 text-center transition-all",
+                on ? "border-brand-500 bg-brand-100 font-extrabold text-brand-800" : "border-dashed border-gray-300 bg-white"
+              )}
+            />
+          );
+        })}
+      </div>
+      <Footer>
+        Tap a box for each sound you hear: <span className="text-brand-700">{filled}/{boxCount}</span>
+        {filled > 0 && <ResetButton onClick={() => setFilled(0)} />}
+      </Footer>
+    </div>
+  );
+}
+
 /**
  * Hands-on helpers shown above or alongside the answer options. They only show what the question already says
  * (they never contain the answer) and a child can freely interact with them. Every control is accessible.
@@ -338,6 +593,21 @@ export default function VisualHelper({ visual }: { visual: Visual }) {
       )}
       {visual.type === "grid" && <GridVisual rows={visual.rows} cols={visual.cols} emoji={visual.emoji} />}
       {visual.type === "clock" && <ClockVisual hour={visual.hour} minute={visual.minute} />}
+      {/* New manipulatives (Phase 7-8) */}
+      {visual.type === "ten_frame" && <TenFrame total={visual.total} filled={visual.filled} />}
+      {visual.type === "number_bond" && (
+        <NumberBond whole={visual.whole} part1={visual.part1} part2={visual.part2} />
+      )}
+      {visual.type === "part_whole" && <PartWhole whole={visual.whole} parts={visual.parts} />}
+      {visual.type === "place_value_blocks" && (
+        <PlaceValueBlocks hundreds={visual.hundreds} tens={visual.tens} ones={visual.ones} />
+      )}
+      {visual.type === "letter_tiles" && (
+        <LetterTilesVisual tiles={visual.tiles} targetGraphemes={visual.targetGraphemes} />
+      )}
+      {visual.type === "phoneme_boxes" && (
+        <PhonemeBoxesVisual wordEmoji={visual.wordEmoji} boxCount={visual.boxCount} />
+      )}
     </div>
   );
 }

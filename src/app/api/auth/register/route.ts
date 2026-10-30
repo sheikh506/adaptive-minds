@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { registerSchema, firstIssue, DEFAULT_AVATAR } from "@/lib/validation";
-import { createRateLimiter } from "@/lib/rate-limit";
+import { createSharedRateLimiter } from "@/lib/rate-limit";
 
 // 10 sign-ups per IP per hour: enough for a classroom behind one router to be slowed, not blocked.
-const limiter = createRateLimiter(10, 60 * 60 * 1000);
+// Uses the DB-backed shared limiter so limits hold across all serverless instances.
+const limiter = createSharedRateLimiter("reg", 10, 60 * 60 * 1000);
 
 function clientIp(req: Request): string {
   return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
@@ -13,7 +14,7 @@ function clientIp(req: Request): string {
 
 export async function POST(req: Request) {
   const ip = clientIp(req);
-  if (limiter.isBlocked(ip)) {
+  if (await limiter.isBlocked(ip)) {
     return NextResponse.json(
       { error: "Too many accounts were created from this network. Please try again in a little while." },
       { status: 429 }
@@ -48,6 +49,11 @@ export async function POST(req: Request) {
     }
 
     const hashed = await bcrypt.hash(password, 12);
+    // Consent audit: store timestamp and truncated User-Agent for the audit trail.
+    // We truncate the UA to 500 chars to avoid storing an excessive string.
+    const consentGiven = role === "STUDENT" && parsed.data.consent === true;
+    const rawAgent = req.headers.get("user-agent") ?? "";
+    const consentAgent = rawAgent.slice(0, 500) || "unknown";
     await prisma.user.create({
       data: {
         name,
@@ -57,9 +63,12 @@ export async function POST(req: Request) {
         grade: role === "STUDENT" ? grade : undefined,
         // Emoji avatar only: we never store photos of children.
         image: role === "STUDENT" ? avatar ?? DEFAULT_AVATAR : undefined,
+        consentGiven,
+        consentAt: consentGiven ? new Date() : undefined,
+        consentAgent: consentGiven ? consentAgent : undefined,
       },
     });
-    limiter.hit(ip);
+    await limiter.hit(ip);
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (e) {
     // Unique-constraint race: two sign-ups with the same email at the same moment.

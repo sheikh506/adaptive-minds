@@ -33,9 +33,11 @@ describe("story question bank", () => {
     for (const [key, n] of counts) expect(n, key).toBeGreaterThanOrEqual(10);
   });
 
-  it("every question has 4 distinct options including the answer", () => {
+  it("every multiple-choice question has 4 distinct options including the answer", () => {
     for (const e of all) {
       const d = dataOf(e);
+      // tile_build exercises use fill_blank with no options (the child constructs the answer from tiles)
+      if (e.type === "fill_blank" && d.options.length === 0) continue;
       expect(d.options, e.id).toHaveLength(4);
       expect(new Set(d.options).size, e.id).toBe(4);
       expect(d.options, e.id).toContain(d.answer);

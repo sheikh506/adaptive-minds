@@ -3,6 +3,8 @@ import { generateComprehension, generatePhonics, generateVocabulary } from "./re
 import { generateCounting, generateData, generateGeometry, generateMeasurement, generateMoney, generateTime } from "./math-extra";
 import { generateGrammar, generateLetters, generateSpelling } from "./language";
 import { generateEarthSpace, generateLifeScience, generateMatterEnergy } from "./science";
+import { generateInteractivePhonics } from "./phonics-interactive";
+import { generateHandsOnMath } from "./math-interactive";
 import { Difficulty } from "@prisma/client";
 
 export type { SeedExercise };
@@ -177,6 +179,8 @@ export function buildExercises(): SeedExercise[] {
     ...generateComprehension(),
     ...readingContent(),
     ...generateExpandedStandards(),
+    ...generateInteractivePhonics(),
+    ...generateHandsOnMath(),
     ...generateCounting(),
     ...generateGeometry(),
     ...generateMeasurement(),

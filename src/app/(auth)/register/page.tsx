@@ -289,25 +289,36 @@ export default function RegisterPage() {
             </div>
 
             {isStudent && (
-              <label
-                className={`flex cursor-pointer items-start gap-3 rounded-2xl border-2 p-4 ${
+              <div
+                className={`rounded-2xl border-2 p-4 ${
                   field === "consent" ? "border-red-400 bg-red-50" : "border-amber-200 bg-amber-50"
                 }`}
               >
-                <input
-                  type="checkbox"
-                  checked={consent}
-                  onChange={(e) => setConsent(e.target.checked)}
-                  className="mt-1 h-6 w-6 flex-shrink-0 accent-brand-600"
-                />
-                <span className="text-sm text-gray-700">
-                  <strong>Grown-up check:</strong> I am a parent, guardian or teacher of this child and I agree to the{" "}
+                <p className="mb-3 text-sm font-bold text-amber-900">
+                  ⚠️ A parent or guardian must complete this step
+                </p>
+                <p className="mb-3 text-xs text-amber-800">
+                  AdaptiveMinds is designed for children. Before creating an account for a child under 13,
+                  a parent or guardian must read our{" "}
                   <Link href="/privacy" target="_blank" className="font-semibold text-brand-700 underline">
                     Privacy Notice
-                  </Link>
-                  .
-                </span>
-              </label>
+                  </Link>{" "}
+                  and tick the box below.
+                </p>
+                <label className="flex cursor-pointer items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={consent}
+                    onChange={(e) => setConsent(e.target.checked)}
+                    className="mt-1 h-6 w-6 flex-shrink-0 accent-brand-600"
+                    aria-describedby="consent-help"
+                  />
+                  <span id="consent-help" className="text-sm text-gray-700">
+                    <strong>I am this child&apos;s parent or guardian.</strong> I have read the Privacy Notice
+                    and I give my permission for this account to be created.
+                  </span>
+                </label>
+              </div>
             )}
 
             <button

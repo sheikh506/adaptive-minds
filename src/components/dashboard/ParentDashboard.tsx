@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Star, Zap, Flame } from "lucide-react";
+import { Star, Zap, Flame, BookOpen } from "lucide-react";
 import type { Prisma } from "@prisma/client";
 import { accuracyOf } from "./TeacherDashboard";
 
@@ -123,6 +123,21 @@ export default function ParentDashboard({ user }: { user: ParentUser }) {
                     ))}
                   </div>
                 )}
+
+                {/* Learning companion link */}
+                <div className="mt-5 border-t border-gray-100 pt-4">
+                  <Link
+                    href={`/dashboard/children/${kid.id}`}
+                    className="flex items-center gap-2 rounded-2xl bg-brand-50 px-4 py-3 text-sm font-bold text-brand-700 hover:bg-brand-100 transition-colors"
+                  >
+                    <BookOpen className="h-4 w-4 flex-shrink-0" />
+                    <span>View skill mastery map</span>
+                    <span className="ml-auto text-brand-400">→</span>
+                  </Link>
+                  <p className="mt-1 text-[11px] text-gray-400">
+                    See individual skill progress, mastery evidence, and activity suggestions.
+                  </p>
+                </div>
               </section>
             );
           })}
