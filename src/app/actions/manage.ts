@@ -5,14 +5,14 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { GRADES, nameSchema, avatarSchema, normalizeEmail } from "@/lib/validation";
+import { GRADES, nameSchema, avatarSchema, normalizeEmail, emailSchema, passwordSchema } from "@/lib/validation";
 import { createSharedRateLimiter } from "@/lib/rate-limit";
 import { PRACTICE_MINUTE_CHOICES } from "@/lib/game";
 
 // Linking asks for a child's password, so it must not be usable as a password-guessing oracle.
 const linkAttempts = createSharedRateLimiter("link", 5, 15 * 60 * 1000);
 
-export type FormState = { error?: string; success?: string };
+export type FormState = { error?: string; success?: string; field?: string };
 
 async function requireUser(role?: "STUDENT" | "TEACHER" | "PARENT") {
   const session = await auth();
@@ -72,7 +72,7 @@ export async function joinClassroom(formData: FormData): Promise<FormState> {
  */
 export async function linkChild(formData: FormData): Promise<FormState> {
   const parentId = await requireUser("PARENT");
-  if (await linkAttempts.isBlocked(parentId)) {
+  if (await linkAttempts.checkAndHit(parentId)) {
     return { error: "Too many tries. Please wait a few minutes and try again." };
   }
   const parsed = z
@@ -88,7 +88,6 @@ export async function linkChild(formData: FormData): Promise<FormState> {
       ? await bcrypt.compare(parsed.data.password, child.password)
       : false;
   if (!child || !ok) {
-    await linkAttempts.hit(parentId);
     return { error: "Email or password is incorrect, or this is not a student account." };
   }
 
@@ -97,6 +96,7 @@ export async function linkChild(formData: FormData): Promise<FormState> {
     update: {},
     create: { parentId, childId: child.id },
   });
+  await linkAttempts.reset(parentId);
   revalidatePath("/dashboard", "layout");
   return { success: `${child.name} was linked to your account.` };
 }
@@ -164,5 +164,84 @@ export async function updateProfile(formData: FormData): Promise<FormState> {
 export async function markNotificationsRead() {
   const userId = await requireUser();
   await prisma.notification.updateMany({ where: { userId, read: false }, data: { read: true } });
+  revalidatePath("/dashboard", "layout");
+}
+
+export async function createChildAccount(formData: FormData): Promise<FormState> {
+  const parentId = await requireUser("PARENT");
+  const name = nameSchema.safeParse(formData.get("name"));
+  const email = emailSchema.safeParse(formData.get("email"));
+  const password = passwordSchema.safeParse(formData.get("password"));
+  const grade = z.enum(GRADES).safeParse(formData.get("grade"));
+  const avatar = avatarSchema.safeParse(formData.get("avatar"));
+
+  if (!name.success) return { error: name.error.issues[0]?.message };
+  if (!email.success) return { error: email.error.issues[0]?.message };
+  if (!password.success) return { error: password.error.issues[0]?.message };
+  if (!grade.success) return { error: "Please pick your child's grade." };
+  if (!avatar.success) return { error: "Please pick an avatar companion." };
+
+  const emailVal = normalizeEmail(email.data);
+  const existing = await prisma.user.findFirst({
+    where: { email: { equals: emailVal, mode: "insensitive" } },
+    select: { id: true },
+  });
+  if (existing) {
+    return { error: "There is already an account with this email.", field: "email" };
+  }
+
+  const hashed = await bcrypt.hash(password.data, 12);
+  const parent = await prisma.user.findUnique({ where: { id: parentId } });
+  const consentAgent = `Parent:${parent?.email || parentId}`;
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const child = await tx.user.create({
+        data: {
+          name: name.data,
+          email: emailVal,
+          password: hashed,
+          role: "STUDENT",
+          grade: grade.data,
+          image: avatar.data,
+          consentGiven: true,
+          consentAt: new Date(),
+          consentAgent,
+        },
+      });
+
+      await tx.parentChild.create({
+        data: { parentId, childId: child.id },
+      });
+    });
+
+    revalidatePath("/dashboard", "layout");
+    return { success: `Successfully created profile for ${name.data}!` };
+  } catch (e) {
+    console.error("createChildAccount failed", e);
+    return { error: "Could not create child profile. Please try again." };
+  }
+}
+
+export async function setChildConsent(formData: FormData): Promise<void> {
+  const parentId = await requireUser("PARENT");
+  const childId = String(formData.get("childId") ?? "");
+  const consent = formData.get("consent") === "true";
+
+  const link = await prisma.parentChild.findUnique({ where: { parentId_childId: { parentId, childId } } });
+  if (!link) return;
+
+  const parent = await prisma.user.findUnique({ where: { id: parentId } });
+  const consentAgent = consent ? `Parent:${parent?.email || parentId}` : null;
+
+  await prisma.user.update({
+    where: { id: childId },
+    data: {
+      consentGiven: consent,
+      consentAt: consent ? new Date() : null,
+      consentAgent,
+    },
+  });
+
   revalidatePath("/dashboard", "layout");
 }

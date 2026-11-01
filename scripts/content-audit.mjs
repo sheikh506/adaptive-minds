@@ -54,17 +54,21 @@ function checkExercise(e) {
   const issues = [];
   const d = e.data;
 
-  if (!d.options || d.options.length !== 4) {
-    issues.push({ severity: "error", code: "OPTIONS_COUNT", detail: `expected 4 options, got ${d.options?.length}` });
-  }
+  const isMultipleChoice = e.type !== "fill_blank" && d.interactionType !== "tile_build";
 
-  if (d.options) {
-    const uniq = new Set(d.options);
-    if (uniq.size !== d.options.length) issues.push({ severity: "error", code: "DUPLICATE_OPTIONS", detail: `options: [${d.options.join(", ")}]` });
-    for (const o of d.options) {
-      if (!o || !String(o).trim()) issues.push({ severity: "error", code: "EMPTY_OPTION", detail: `empty option in [${d.options.join(", ")}]` });
+  if (isMultipleChoice) {
+    if (!d.options || d.options.length !== 4) {
+      issues.push({ severity: "error", code: "OPTIONS_COUNT", detail: `expected 4 options, got ${d.options?.length}` });
     }
-    if (!d.options.includes(d.answer)) issues.push({ severity: "error", code: "ANSWER_NOT_IN_OPTIONS", detail: `answer "${d.answer}" not in [${d.options.join(", ")}]` });
+
+    if (d.options) {
+      const uniq = new Set(d.options);
+      if (uniq.size !== d.options.length) issues.push({ severity: "error", code: "DUPLICATE_OPTIONS", detail: `options: [${d.options.join(", ")}]` });
+      for (const o of d.options) {
+        if (!o || !String(o).trim()) issues.push({ severity: "error", code: "EMPTY_OPTION", detail: `empty option in [${d.options.join(", ")}]` });
+      }
+      if (!d.options.includes(d.answer)) issues.push({ severity: "error", code: "ANSWER_NOT_IN_OPTIONS", detail: `answer "${d.answer}" not in [${d.options.join(", ")}]` });
+    }
   }
 
   if (!d.explanation || d.explanation.trim().length < 5) {

@@ -31,20 +31,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!parsed.success) return null;
 
         const email = normalizeEmail(parsed.data.email);
-        if (await failedLogins.isBlocked(email)) return null;
+        if (await failedLogins.checkAndHit(email)) return null;
 
         // Case-insensitive so accounts created before emails were normalised can still sign in.
         const user = await prisma.user.findFirst({
           where: { email: { equals: email, mode: "insensitive" } },
         });
         if (!user || !user.password) {
-          await failedLogins.hit(email);
           return null;
         }
 
         const valid = await bcrypt.compare(parsed.data.password, user.password);
         if (!valid) {
-          await failedLogins.hit(email);
           return null;
         }
         await failedLogins.reset(email);

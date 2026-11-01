@@ -17,6 +17,7 @@ import { SKILL_CURRICULUM } from "@/lib/skill-curriculum";
 import { skillStateSummary, type SkillStateSnapshot } from "@/lib/skill-mastery-engine";
 import { recommendNextSkill } from "@/lib/misconception-classifier";
 import type { SkillStage } from "@prisma/client";
+import { getCoachingPlan, type CoachedPlan } from "./parent-coaching-plans";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -68,6 +69,7 @@ export interface ChildCompanionData {
   weeklySessionCount: number;
   /** A brief narrative summary for parents in plain language */
   narrative: string;
+  coachedPlan: CoachedPlan;
 }
 
 // ─── Offline activities ───────────────────────────────────────────────────────
@@ -294,6 +296,28 @@ export async function loadChildCompanionData(
   // Plain-language narrative
   const narrative = buildNarrative(child.name ?? "Your child", totalMastered, totalInProgress, weeklySessionCount, subjectMaps);
 
+  // Determine the target skill for the adaptive Coached Daily Learning Plan
+  let dailyPlanSkill = SKILL_CURRICULUM[0];
+  if (nextSteps.length > 0) {
+    const recommendedId = nextSteps[0].skillId;
+    const found = SKILL_CURRICULUM.find((s) => s.id === recommendedId);
+    if (found) dailyPlanSkill = found;
+  } else {
+    // Look for any started, in-progress skill as fallback
+    const startedInOrder = SKILL_CURRICULUM.find((s) => {
+      const stage = skillStageMap.get(s.id);
+      return stage && stage !== "MASTERED" && stage !== "REVIEW";
+    });
+    if (startedInOrder) dailyPlanSkill = startedInOrder;
+  }
+
+  const coachedPlan = getCoachingPlan(
+    dailyPlanSkill.id,
+    dailyPlanSkill.name,
+    dailyPlanSkill.subject,
+    dailyPlanSkill.objective
+  );
+
   return {
     childId,
     childName: child.name ?? "Your child",
@@ -304,6 +328,7 @@ export async function loadChildCompanionData(
     totalInProgress,
     weeklySessionCount,
     narrative,
+    coachedPlan,
   };
 }
 

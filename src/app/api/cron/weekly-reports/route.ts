@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { collectWeeklyReports } from "@/lib/reports";
 import { sendEmail } from "@/lib/email";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -22,6 +23,16 @@ function authorised(req: Request): boolean {
  */
 export async function GET(req: Request) {
   if (!authorised(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Rate-limit counter expiry and cleanup
+  try {
+    const deletedCount = await prisma.rateLimitEntry.deleteMany({
+      where: { resetAt: { lt: new Date() } },
+    });
+    console.log(`[cron-cleanup] Cleaned up ${deletedCount.count} expired rate-limit entries.`);
+  } catch (err) {
+    console.error("[cron-cleanup] Failed to clean up expired rate-limit entries:", err);
+  }
 
   const dryRun = new URL(req.url).searchParams.get("dryRun") === "1";
   const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);

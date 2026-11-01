@@ -1,3 +1,6 @@
+"use client";
+
+
 /**
  * Printable: Number Bonds to 10
  * Blank part-whole bond diagrams for numbers 1–10.

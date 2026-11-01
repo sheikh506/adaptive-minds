@@ -1,3 +1,6 @@
+"use client";
+
+
 /**
  * Printable: Phoneme Counting Boxes
  * Rows of 5 segmentation boxes. Child moves a counter into each box for each sound.
@@ -51,7 +54,7 @@ export default function PhonemeBoxesPage() {
         Say each word aloud slowly. Move one counter into a box for each sound you hear. Count the filled boxes — that is how many phonemes!
       </p>
       <p style={{ fontSize: "12px", background: "#fef3c7", padding: "6px 10px", borderRadius: "6px", color: "#78350f", marginBottom: "1.5rem" }}>
-        <strong>Remember:</strong> Count sounds, not letters. "Ship" has 4 letters but 3 sounds: /ʃ/ /ɪ/ /p/.
+        <strong>Remember:</strong> Count sounds, not letters. &quot;Ship&quot; has 4 letters but 3 sounds: /ʃ/ /ɪ/ /p/.
       </p>
 
       <table style={{ width: "100%", borderCollapse: "collapse" }}>

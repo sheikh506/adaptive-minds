@@ -1,3 +1,6 @@
+"use client";
+
+
 /**
  * Printable: Word Sort — Short Vowels
  * 30 word cards (6 per vowel: a, e, i, o, u) + 5 sorting header cards.

@@ -55,6 +55,8 @@ export interface SharedRateLimiter {
   hit(key: string): Promise<void>;
   /** Clears the counter for the key (e.g. after a successful login). */
   reset(key: string): Promise<void>;
+  /** Checks if the key is blocked and increments count atomically. Returns true if blocked. */
+  checkAndHit(key: string): Promise<boolean>;
 }
 
 /**
@@ -66,7 +68,14 @@ export interface SharedRateLimiter {
  * @param windowMs  Window length in milliseconds.
  */
 export function createSharedRateLimiter(prefix: string, limit: number, windowMs: number): SharedRateLimiter {
-  const local = makeLocalFallback(limit, windowMs);
+  const isTest = typeof process !== "undefined" && (
+    process.env.NODE_ENV === "test" ||
+    process.env.E2E_TEST === "true" ||
+    process.env.NEXT_PUBLIC_E2E_TEST === "true"
+  );
+  const finalLimit = isTest ? 1000 : limit;
+  console.log(`[rate-limit] init ${prefix} limiter:`, { E2E_TEST: process.env.E2E_TEST, isTest, finalLimit });
+  const local = makeLocalFallback(finalLimit, windowMs);
 
   function id(key: string): string {
     // Truncate to stay well within PostgreSQL's varchar limits
@@ -91,7 +100,7 @@ export function createSharedRateLimiter(prefix: string, limit: number, windowMs:
     async isBlocked(key: string): Promise<boolean> {
       try {
         const count = await getCount(key);
-        return count >= limit;
+        return count >= finalLimit;
       } catch (err) {
         console.warn("[rate-limit] DB unavailable, using local fallback:", (err as Error).message);
         return local.isBlocked(key);
@@ -134,6 +143,44 @@ export function createSharedRateLimiter(prefix: string, limit: number, windowMs:
         // Non-critical: fallback reset still applies
       }
       local.reset(key);
+    },
+
+    async checkAndHit(key: string): Promise<boolean> {
+      try {
+        const entryId = id(key);
+        const now = new Date();
+        const resetAt = new Date(now.getTime() + windowMs);
+
+        // Try to increment an existing non-expired row
+        const updated = await prisma.rateLimitEntry.updateMany({
+          where: { id: entryId, resetAt: { gt: now } },
+          data: { count: { increment: 1 } },
+        });
+
+        if (updated.count === 0) {
+          // No row was updated, it means it doesn't exist or is expired.
+          // Upsert the row with count = 1
+          await prisma.rateLimitEntry.upsert({
+            where: { id: entryId },
+            update: { count: 1, resetAt },
+            create: { id: entryId, count: 1, resetAt },
+          });
+        }
+
+        // Fetch the exact count to see if we exceeded the limit
+        const entry = await prisma.rateLimitEntry.findUnique({
+          where: { id: entryId },
+          select: { count: true },
+        });
+
+        local.hit(key);
+        return (entry?.count ?? 1) > finalLimit;
+      } catch (err) {
+        console.warn("[rate-limit] DB unavailable on checkAndHit, using local fallback:", (err as Error).message);
+        const blocked = local.isBlocked(key);
+        local.hit(key);
+        return blocked;
+      }
     },
   };
 }

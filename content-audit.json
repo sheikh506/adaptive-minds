@@ -1,0 +1,407 @@
+{
+  "generatedAt": "2026-11-01T15:58:42.763Z",
+  "summary": {
+    "totalExercises": 3935,
+    "totalTopics": 20,
+    "duplicateIds": 0,
+    "errorCount": 0,
+    "warningCount": 0,
+    "pass": true
+  },
+  "knownGaps": {
+    "phonicsOralInteraction": {
+      "status": "missing",
+      "detail": "All phonics questions are multiple-choice written recognition only. No spoken phoneme or letter-tile interaction exists. This means choosing the correct written option does not prove decoding ability.",
+      "modes": [
+        "multiple_choice",
+        "fill_blank"
+      ]
+    },
+    "teachGuidedIndependentMastery": {
+      "status": "missing",
+      "detail": "There is no TEACH → GUIDED PRACTICE → INDEPENDENT PRACTICE → MASTERY CHECK → REVIEW sequence. All questions draw from the same pool regardless of learning stage."
+    },
+    "decodableReaders": {
+      "status": "missing",
+      "detail": "No decodable readers aligned to mastered grapheme patterns exist."
+    },
+    "tenFramesAndManipulatives": {
+      "status": "missing",
+      "detail": "No interactive ten-frame, number bond, part-whole model, or place-value block Visual types exist."
+    },
+    "agePathway": {
+      "status": "missing",
+      "detail": "No explicit age 4-5 / age 6-7 developmental pathway exists. Grade is used as a proxy but grade does not equal demonstrated skill."
+    }
+  },
+  "topicCoverage": [
+    {
+      "topicId": "topic-addition",
+      "totalExercises": 314,
+      "byLevel": {
+        "1": 32,
+        "2": 48,
+        "3": 48,
+        "4": 40,
+        "5": 24,
+        "6": 25,
+        "7": 25,
+        "8": 24,
+        "9": 24,
+        "10": 24
+      },
+      "earlyLearnerCoverage": 168,
+      "earlyLearnerOk": true
+    },
+    {
+      "topicId": "topic-subtraction",
+      "totalExercises": 256,
+      "byLevel": {
+        "1": 24,
+        "2": 24,
+        "3": 24,
+        "4": 32,
+        "5": 32,
+        "6": 24,
+        "7": 24,
+        "8": 24,
+        "9": 24,
+        "10": 24
+      },
+      "earlyLearnerCoverage": 104,
+      "earlyLearnerOk": true
+    },
+    {
+      "topicId": "topic-multiplication",
+      "totalExercises": 243,
+      "byLevel": {
+        "1": 24,
+        "2": 24,
+        "3": 24,
+        "4": 24,
+        "5": 24,
+        "6": 25,
+        "7": 24,
+        "8": 26,
+        "9": 24,
+        "10": 24
+      },
+      "earlyLearnerCoverage": 96,
+      "earlyLearnerOk": true
+    },
+    {
+      "topicId": "topic-division",
+      "totalExercises": 240,
+      "byLevel": {
+        "1": 24,
+        "2": 24,
+        "3": 24,
+        "4": 24,
+        "5": 24,
+        "6": 24,
+        "7": 24,
+        "8": 24,
+        "9": 24,
+        "10": 24
+      },
+      "earlyLearnerCoverage": 96,
+      "earlyLearnerOk": true
+    },
+    {
+      "topicId": "topic-fractions",
+      "totalExercises": 241,
+      "byLevel": {
+        "1": 24,
+        "2": 24,
+        "3": 24,
+        "4": 24,
+        "5": 24,
+        "6": 24,
+        "7": 24,
+        "8": 24,
+        "9": 25,
+        "10": 24
+      },
+      "earlyLearnerCoverage": 96,
+      "earlyLearnerOk": true
+    },
+    {
+      "topicId": "topic-phonics",
+      "totalExercises": 257,
+      "byLevel": {
+        "1": 30,
+        "2": 30,
+        "3": 29,
+        "4": 29,
+        "5": 29,
+        "6": 29,
+        "7": 21,
+        "8": 20,
+        "9": 20,
+        "10": 20
+      },
+      "earlyLearnerCoverage": 118,
+      "earlyLearnerOk": true,
+      "phonicsModes": [
+        "multiple_choice",
+        "fill_blank"
+      ]
+    },
+    {
+      "topicId": "topic-vocabulary",
+      "totalExercises": 209,
+      "byLevel": {
+        "1": 21,
+        "2": 21,
+        "3": 21,
+        "4": 21,
+        "5": 21,
+        "6": 21,
+        "7": 21,
+        "8": 21,
+        "9": 21,
+        "10": 20
+      },
+      "earlyLearnerCoverage": 84,
+      "earlyLearnerOk": true
+    },
+    {
+      "topicId": "topic-comprehension",
+      "totalExercises": 202,
+      "byLevel": {
+        "1": 20,
+        "2": 21,
+        "3": 21,
+        "4": 21,
+        "5": 21,
+        "6": 21,
+        "7": 21,
+        "8": 20,
+        "9": 16,
+        "10": 20
+      },
+      "earlyLearnerCoverage": 83,
+      "earlyLearnerOk": true
+    },
+    {
+      "topicId": "topic-counting",
+      "totalExercises": 247,
+      "byLevel": {
+        "1": 23,
+        "2": 24,
+        "3": 32,
+        "4": 32,
+        "5": 32,
+        "6": 32,
+        "7": 24,
+        "8": 16,
+        "9": 16,
+        "10": 16
+      },
+      "earlyLearnerCoverage": 111,
+      "earlyLearnerOk": true
+    },
+    {
+      "topicId": "topic-geometry",
+      "totalExercises": 144,
+      "byLevel": {
+        "1": 11,
+        "2": 16,
+        "3": 15,
+        "4": 14,
+        "5": 16,
+        "6": 14,
+        "7": 14,
+        "8": 14,
+        "9": 16,
+        "10": 14
+      },
+      "earlyLearnerCoverage": 56,
+      "earlyLearnerOk": true
+    },
+    {
+      "topicId": "topic-measurement",
+      "totalExercises": 160,
+      "byLevel": {
+        "1": 16,
+        "2": 16,
+        "3": 16,
+        "4": 16,
+        "5": 16,
+        "6": 16,
+        "7": 16,
+        "8": 16,
+        "9": 16,
+        "10": 16
+      },
+      "earlyLearnerCoverage": 64,
+      "earlyLearnerOk": true
+    },
+    {
+      "topicId": "topic-time",
+      "totalExercises": 160,
+      "byLevel": {
+        "1": 16,
+        "2": 16,
+        "3": 16,
+        "4": 16,
+        "5": 16,
+        "6": 16,
+        "7": 16,
+        "8": 16,
+        "9": 16,
+        "10": 16
+      },
+      "earlyLearnerCoverage": 64,
+      "earlyLearnerOk": true
+    },
+    {
+      "topicId": "topic-money",
+      "totalExercises": 160,
+      "byLevel": {
+        "1": 16,
+        "2": 16,
+        "3": 16,
+        "4": 16,
+        "5": 16,
+        "6": 16,
+        "7": 16,
+        "8": 16,
+        "9": 16,
+        "10": 16
+      },
+      "earlyLearnerCoverage": 64,
+      "earlyLearnerOk": true
+    },
+    {
+      "topicId": "topic-data",
+      "totalExercises": 160,
+      "byLevel": {
+        "1": 16,
+        "2": 16,
+        "3": 16,
+        "4": 16,
+        "5": 16,
+        "6": 16,
+        "7": 16,
+        "8": 16,
+        "9": 16,
+        "10": 16
+      },
+      "earlyLearnerCoverage": 64,
+      "earlyLearnerOk": true
+    },
+    {
+      "topicId": "topic-letters",
+      "totalExercises": 160,
+      "byLevel": {
+        "1": 16,
+        "2": 16,
+        "3": 16,
+        "4": 16,
+        "5": 16,
+        "6": 16,
+        "7": 16,
+        "8": 16,
+        "9": 16,
+        "10": 16
+      },
+      "earlyLearnerCoverage": 64,
+      "earlyLearnerOk": true
+    },
+    {
+      "topicId": "topic-spelling",
+      "totalExercises": 156,
+      "byLevel": {
+        "1": 14,
+        "2": 16,
+        "3": 16,
+        "4": 16,
+        "5": 16,
+        "6": 16,
+        "7": 16,
+        "8": 14,
+        "9": 16,
+        "10": 16
+      },
+      "earlyLearnerCoverage": 62,
+      "earlyLearnerOk": true
+    },
+    {
+      "topicId": "topic-grammar",
+      "totalExercises": 149,
+      "byLevel": {
+        "1": 14,
+        "2": 16,
+        "3": 16,
+        "4": 16,
+        "5": 16,
+        "6": 15,
+        "7": 16,
+        "8": 14,
+        "9": 13,
+        "10": 13
+      },
+      "earlyLearnerCoverage": 62,
+      "earlyLearnerOk": true
+    },
+    {
+      "topicId": "topic-life-science",
+      "totalExercises": 160,
+      "byLevel": {
+        "1": 16,
+        "2": 16,
+        "3": 16,
+        "4": 16,
+        "5": 16,
+        "6": 16,
+        "7": 16,
+        "8": 16,
+        "9": 16,
+        "10": 16
+      },
+      "earlyLearnerCoverage": 64,
+      "earlyLearnerOk": true
+    },
+    {
+      "topicId": "topic-earth-space",
+      "totalExercises": 157,
+      "byLevel": {
+        "1": 15,
+        "2": 15,
+        "3": 15,
+        "4": 16,
+        "5": 16,
+        "6": 16,
+        "7": 16,
+        "8": 16,
+        "9": 16,
+        "10": 16
+      },
+      "earlyLearnerCoverage": 61,
+      "earlyLearnerOk": true
+    },
+    {
+      "topicId": "topic-matter-energy",
+      "totalExercises": 160,
+      "byLevel": {
+        "1": 16,
+        "2": 16,
+        "3": 16,
+        "4": 16,
+        "5": 16,
+        "6": 16,
+        "7": 16,
+        "8": 16,
+        "9": 16,
+        "10": 16
+      },
+      "earlyLearnerCoverage": 64,
+      "earlyLearnerOk": true
+    }
+  ],
+  "duplicateIds": [],
+  "errors": [],
+  "warnings": [],
+  "allIssues": []
+}

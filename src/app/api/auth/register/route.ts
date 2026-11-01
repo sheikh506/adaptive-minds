@@ -9,12 +9,18 @@ import { createSharedRateLimiter } from "@/lib/rate-limit";
 const limiter = createSharedRateLimiter("reg", 10, 60 * 60 * 1000);
 
 function clientIp(req: Request): string {
-  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const headers = req.headers;
+  return (
+    headers.get("x-real-ip") ||
+    headers.get("cf-connecting-ip") ||
+    headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    "unknown"
+  );
 }
 
 export async function POST(req: Request) {
   const ip = clientIp(req);
-  if (await limiter.isBlocked(ip)) {
+  if (await limiter.checkAndHit(ip)) {
     return NextResponse.json(
       { error: "Too many accounts were created from this network. Please try again in a little while." },
       { status: 429 }
@@ -49,9 +55,9 @@ export async function POST(req: Request) {
     }
 
     const hashed = await bcrypt.hash(password, 12);
-    // Consent audit: store timestamp and truncated User-Agent for the audit trail.
-    // We truncate the UA to 500 chars to avoid storing an excessive string.
-    const consentGiven = role === "STUDENT" && parsed.data.consent === true;
+    // Consent audit: direct student registration never allows self-consent.
+    // It must start as false and be approved by an authenticated parent or teacher.
+    const consentGiven = false;
     const rawAgent = req.headers.get("user-agent") ?? "";
     const consentAgent = rawAgent.slice(0, 500) || "unknown";
     await prisma.user.create({
@@ -64,11 +70,10 @@ export async function POST(req: Request) {
         // Emoji avatar only: we never store photos of children.
         image: role === "STUDENT" ? avatar ?? DEFAULT_AVATAR : undefined,
         consentGiven,
-        consentAt: consentGiven ? new Date() : undefined,
-        consentAgent: consentGiven ? consentAgent : undefined,
+        consentAt: undefined,
+        consentAgent: undefined,
       },
     });
-    await limiter.hit(ip);
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (e) {
     // Unique-constraint race: two sign-ups with the same email at the same moment.

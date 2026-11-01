@@ -1,3 +1,6 @@
+"use client";
+
+
 /**
  * Printable: Ten Frame Activity
  * Multiple ten-frames + counter circles. Child uses small objects as counters.
@@ -64,7 +67,7 @@ export default function TenFramePage() {
       ))}
 
       {/* Counter strip */}
-      <h2 style={{ fontSize: "15px", borderBottom: "2px solid #e5e7eb", paddingBottom: "4px", marginTop: "1.5rem", marginBottom: "0.75rem" }}>Counter Dots — cut out and use if you don't have small objects</h2>
+      <h2 style={{ fontSize: "15px", borderBottom: "2px solid #e5e7eb", paddingBottom: "4px", marginTop: "1.5rem", marginBottom: "0.75rem" }}>Counter Dots — cut out and use if you don&apos;t have small objects</h2>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
         {Array.from({ length: 40 }).map((_, i) => (
           <div key={i} style={{

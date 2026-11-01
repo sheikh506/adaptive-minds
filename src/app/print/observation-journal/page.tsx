@@ -1,3 +1,6 @@
+"use client";
+
+
 /**
  * Printable: Science Observation Journal
  * One observation page — what I see, what I wonder, what changed.

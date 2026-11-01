@@ -70,7 +70,7 @@ export default async function CodingPage() {
         <p className="mt-1">
           This activity supports early computational thinking — sequencing, planning and debugging — without any screen-based programming syntax.
           The block-based approach is widely used in Early Years and KS1 computing curricula.
-          Encourage your child to say each step aloud before pressing Run: "first right, then down…".
+          Encourage your child to say each step aloud before pressing Run: &quot;first right, then down…&quot;.
         </p>
       </div>
     </div>

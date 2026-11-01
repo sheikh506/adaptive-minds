@@ -1,3 +1,6 @@
+"use client";
+
+
 /**
  * Printable: Story Retelling Mat
  * Beginning / Middle / End layout with draw + write spaces.

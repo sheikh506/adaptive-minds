@@ -48,7 +48,7 @@ function LetterCard({ lf }: { lf: LetterFormation }) {
           {/* Verbal cue */}
           <div className="rounded-xl bg-yellow-50 border border-yellow-200 px-4 py-3">
             <p className="text-xs font-bold text-yellow-700 mb-1">🗣️ Say while you write</p>
-            <p className="text-sm font-semibold text-yellow-900 italic">"{lf.verbCue}"</p>
+            <p className="text-sm font-semibold text-yellow-900 italic">&quot;{lf.verbCue}&quot;</p>
           </div>
 
           {/* Common error */}

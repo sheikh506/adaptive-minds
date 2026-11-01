@@ -1,3 +1,6 @@
+"use client";
+
+
 /**
  * Printable: Place Value Mats — Tens and Ones
  * Columns for tens and ones. Child draws bundles of 10 sticks (tens) and single sticks (ones).

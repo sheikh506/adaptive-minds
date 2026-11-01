@@ -1,3 +1,6 @@
+"use client";
+
+
 /**
  * Printable: CVC Word Building
  * 30 letter tiles (consonants + vowels) + 12 picture-word cards.

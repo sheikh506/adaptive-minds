@@ -136,6 +136,25 @@ export default function StudentDashboard({
         ))}
       </div>
 
+      {/* Next-Gen Labs Row */}
+      <div className="space-y-3">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500">Interactive Laboratories & Quests 🔬</h3>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {[
+            { href: "/dashboard/learn/phonics-studio", emoji: "🧪", title: "Phonics Lab", sub: "Explore pure sounds", grad: "from-teal-400 to-emerald-500" },
+            { href: "/dashboard/stories/create", emoji: "📔", title: "Story Creator", sub: "Write & narrate books", grad: "from-purple-500 to-fuchsia-500" },
+            { href: "/dashboard/learn/discovery", emoji: "🧭", title: "Discovery Hub", sub: "Hands-on explorations", grad: "from-orange-400 to-amber-500" },
+            { href: "/dashboard/learn/eal", emoji: "🏫", title: "English Lab", sub: "EAL friendly visual drills", grad: "from-sky-400 to-indigo-500" },
+          ].map((t) => (
+            <Link key={t.href} href={t.href} className={`tile bg-gradient-to-br ${t.grad}`}>
+              <span className="animate-float block text-5xl drop-shadow" aria-hidden="true">{t.emoji}</span>
+              <p className="mt-2 text-lg font-bold leading-tight">{t.title}</p>
+              <p className="text-xs text-white/90">{t.sub}</p>
+            </Link>
+          ))}
+        </div>
+      </div>
+
       {/* Spaced Repetition Refresher Alert */}
       {retentionReviews.length > 0 && (
         <div className="rounded-3xl border-2 border-amber-200 bg-amber-50/60 p-5 shadow-sm">

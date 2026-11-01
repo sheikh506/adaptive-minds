@@ -44,7 +44,7 @@ function FeelingsDetail({ card }: { card: FeelingsCard }) {
         </ul>
       </div>
       <div className="rounded-2xl bg-white border border-brand-200 px-4 py-3">
-        <p className="text-xs font-bold text-brand-700 mb-1">👀 What to look for on someone's face</p>
+        <p className="text-xs font-bold text-brand-700 mb-1">👀 What to look for on someone&apos;s face</p>
         <p className="text-sm text-gray-800">{card.faceClue}</p>
       </div>
       <div className="rounded-2xl bg-green-50 border border-green-200 px-4 py-3">
